@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Validator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="upload-card">
+            <h1>File Validator</h1>
+            <p class="subtitle">Securely validate your uploads</p>
+            
+            <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="drop-zone" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & drop or Click to browse</p>
+                    <input type="file" name="file" class="file-input" id="fileInput">
+                </div>
+                
+                <div id="fileDisplay" class="file-info" style="display: none;">
+                    <strong>Selected:</strong> <span id="fileName"></span>
+                </div>
+
+                <ul class="validation-list">
+                    <li class="validation-item check">Max Size: 2MB</li>
+                    <li class="validation-item check">Allowed: PDF, PNG, JPG, TXT</li>
+                </ul>
+
+                {% if error %}
+                <div class="status-msg error">{{ error }}</div>
+                {% endif %}
+
+                {% if success %}
+                <div class="status-msg success">{{ success }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn-submit">Validate & Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const fileDisplay = document.getElementById('fileDisplay');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+                fileDisplay.style.display = 'block';
+                dropZone.classList.add('active');
+            }
+        });
+
+        ['dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                if (evt === 'dragover') dropZone.classList.add('active');
+                if (evt === 'dragleave') dropZone.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
