@@ -30,4 +30,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/.vscode:latest
+          # Use a valid image name (no leading dot component). Using a descriptive repo image name.
+          tags: ghcr.io/${{ github.repository_owner }}/cmnarefin-cyber-vscode:latest
