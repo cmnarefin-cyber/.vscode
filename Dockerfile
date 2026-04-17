@@ -5,13 +5,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install dependencies (requirements.txt lives in .vscode/)
-COPY .vscode/requirements.txt ./
+# Install dependencies (requirements.txt at repo root)
+COPY requirements.txt ./
 RUN python -m pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy app sources from the .vscode subfolder
-COPY .vscode /app
+# Copy app sources from repository root
+COPY . /app
 
 # Create a non-root user and switch to it
 RUN useradd -m appuser || true
