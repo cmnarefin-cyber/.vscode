@@ -25,6 +25,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Copy nested app files to repo root (if present)
+        run: |
+          if [ -d .vscode ]; then
+            cp -a .vscode/. .
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
