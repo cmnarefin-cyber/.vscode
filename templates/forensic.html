@@ -10,11 +10,17 @@
 <body>
     <div class="dashboard-container">
         <header>
-            <div class="official-seal">CONFIDENTIAL // MULTINATIONAL INVESTIGATIVE OPERATIONS // FIU-BD</div>
-            <h1>Intelligence Visualizer</h1>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <img src="/static/forensic_intelligence_seal.png" id="mainSeal" alt="S.O.G. Seal" style="width: 80px; height: 80px; filter: drop-shadow(0 0 10px var(--primary-dim));">
+                <div>
+                    <div class="official-seal">CONFIDENTIAL // MULTINATIONAL INVESTIGATIVE OPERATIONS // FIU-BD</div>
+                    <h1>Intelligence Visualizer</h1>
+                </div>
+            </div>
             <div class="case-subject">
-                <span>SYSTEM STATUS: OPERATIONAL</span> | 
-                <span>CASE REF: BD-BB-AR-2026</span> | 
+                <span>SYSTEM HEALTH: <span id="sysStatus" style="color: var(--primary);">OPTIMIZING...</span></span> | 
+                <span>CPU: <span id="cpuLoad">--</span></span> | 
+                <span>MEM: <span id="memLoad">--</span></span> | 
                 <span id="coordDisplay">LOC: 23.8103° N, 90.4125° E</span>
             </div>
         </header>
@@ -54,6 +60,7 @@
                         <span class="status-badge" id="bufferStatus">OFFLINE</span>
                     </div>
                     <div class="viewer-frame" id="analysisFrame">
+                        <div class="scanner-line"></div>
                         <div class="empty-state">
                             <h3>AWAITING ASSET</h3>
                             <p>Once ingested, assets will appear here for multi-spectral enhancement and entity extraction.</p>
@@ -112,9 +119,24 @@
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
             document.getElementById(tabId).style.display = 'block';
-            event.currentTarget.classList.add('active');
+            if (event) event.currentTarget.classList.add('active');
             addLog(`VIEW: Switched to ${tabId.toUpperCase()} module.`);
         }
+
+        async function updateTelemetry() {
+            try {
+                const resp = await fetch('/telemetry');
+                const data = await resp.json();
+                document.getElementById('cpuLoad').innerText = data.cpu;
+                document.getElementById('memLoad').innerText = data.memory;
+                document.getElementById('sysStatus').innerText = data.status;
+                document.getElementById('sysStatus').style.color = data.status === 'SECURE' ? 'var(--primary)' : 'var(--accent-red)';
+            } catch (e) {
+                console.error("Telemetry error", e);
+            }
+        }
+        setInterval(updateTelemetry, 3000);
+        updateTelemetry();
 
         function addLog(msg) {
             const entry = document.createElement('div');
@@ -210,7 +232,15 @@
             addLog("SUCCESS: Financial intelligence report finalized.");
         }
 
-        function analyze() { addLog("ANALYSIS: Adaptive histogram equalization initiated."); }
+        function analyze() { 
+            const frame = document.getElementById('analysisFrame');
+            frame.classList.add('scanning');
+            addLog("ANALYSIS: Adaptive histogram equalization initiated.");
+            setTimeout(() => {
+                frame.classList.remove('scanning');
+                addLog("SUCCESS: Multi-spectral enhancement complete.");
+            }, 6000);
+        }
         function extractEntities() { addLog("OCR: Triggering entity identification algorithms..."); }
 
     </script>
