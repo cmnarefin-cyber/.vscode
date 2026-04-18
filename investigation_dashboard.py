@@ -42,23 +42,23 @@ def generate_report():
 @app.route('/telemetry')
 def get_telemetry():
     try:
-        # Quick PowerShell check for CPU and Free RAM
-        cmd = "Get-CimInstance Win32_OperatingSystem | Select-Object -Property TotalVisibleMemorySize, FreePhysicalMemory; (Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average"
+        # Improved PowerShell command returning just numeric values
+        cmd = "(Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize; (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory; (Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average"
         result = subprocess.check_output(["powershell", "-Command", cmd], text=True)
         lines = [line.strip() for line in result.split("\n") if line.strip()]
         
-        # Parse output (simplified)
-        cpu = lines[-1]
-        mem_info = lines[1].split()
-        total_mem = int(mem_info[0])
-        free_mem = int(mem_info[1])
-        mem_usage = round((1 - (free_mem / total_mem)) * 100, 1)
-        
-        return jsonify({
-            "cpu": f"{cpu}%",
-            "memory": f"{mem_usage}%",
-            "status": "SECURE" if float(cpu) < 80 else "CRITICAL"
-        })
+        if len(lines) >= 3:
+            total_mem = int(lines[0])
+            free_mem = int(lines[1])
+            cpu = lines[2]
+            mem_usage = round((1 - (free_mem / total_mem)) * 100, 1)
+            
+            return jsonify({
+                "cpu": f"{cpu}%",
+                "memory": f"{mem_usage}%",
+                "status": "SECURE" if float(cpu) < 80 else "CRITICAL"
+            })
+        return jsonify({"cpu": "N/A", "memory": "N/A", "status": "WARMUP"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
