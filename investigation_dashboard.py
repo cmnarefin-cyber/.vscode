@@ -4,6 +4,12 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from forensic_engine import ingestor, analyzer, integrator, reporter
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -46,7 +52,18 @@ def generate_report():
 @app.route('/telemetry')
 def get_telemetry():
     try:
-        # Improved PowerShell command returning just numeric values
+        if psutil:
+            # High-fidelity cross-platform telemetry using psutil
+            cpu = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory().percent
+            return jsonify({
+                "cpu": f"{cpu}%",
+                "memory": f"{memory}%",
+                "status": "SECURE" if cpu < 80 else "CRITICAL",
+                "platform": "PSUTIL_CORE"
+            })
+        
+        # Fallback to PowerShell for Windows systems without psutil
         cmd = "(Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize; (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory; (Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average"
         result = subprocess.check_output(["powershell", "-Command", cmd], text=True)
         lines = [line.strip() for line in result.split("\n") if line.strip()]
@@ -60,7 +77,8 @@ def get_telemetry():
             return jsonify({
                 "cpu": f"{cpu}%",
                 "memory": f"{mem_usage}%",
-                "status": "SECURE" if float(cpu) < 80 else "CRITICAL"
+                "status": "SECURE" if float(cpu) < 80 else "CRITICAL",
+                "platform": "POWERSHELL_FALLBACK"
             })
         return jsonify({"cpu": "N/A", "memory": "N/A", "status": "WARMUP"}), 200
     except Exception as e:

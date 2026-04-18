@@ -18,10 +18,10 @@ RUN useradd -m appuser || true
 USER appuser
 
 # Default app module (override with APP env var)
-ENV APP=github_app_auth
+ENV APP=investigation_dashboard
 
 # Expose primary HTTP port
-EXPOSE 5000
+EXPOSE 5002
 
 # Use gunicorn for production serving; allow APP override
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 ${APP}:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:5002 ${APP}:app"]
