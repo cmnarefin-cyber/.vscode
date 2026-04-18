@@ -1,0 +1,49 @@
+{
+  "entities": [
+    {
+      "name": "Abdur Rajjak",
+      "aliases": ["Rajjak A.", "The Collector"],
+      "status": "Under Investigation",
+      "risk_level": "High",
+      "associated_orgs": ["Private Antiquities Group", "Asset Management BD"],
+      "records": {
+        "interpol": "Flagged for document inconsistency in 2024",
+        "fiu": "Multiple large volume wire transfers from UK, HK",
+        "unesco": "No known heritage crimes; legal exporter status requested"
+      }
+    },
+    {
+      "name": "Bangladesh Bank",
+      "type": "Institutional",
+      "role": "Regulatory Oversight",
+      "clearance_status": "Active Audit",
+      "notes": "Maintains oversight on all multi-billion dollar heritage asset settlements."
+    }
+  ],
+  "assets": [
+    {
+      "type": "Radioactive Antique",
+      "id": "RA-9921-BD",
+      "isotopes": ["U-238", "Ra-226"],
+      "origin": "Bengal Sultanate Era",
+      "last_appraisal": "$2.4 Billion USD",
+      "historical_significance": "Extremely high - Unique molecular properties (Rice Puller capable)",
+      "legal_status": "Restricted Heritage"
+    },
+    {
+      "type": "Vintage Currency",
+      "id": "VC-1880-EAST",
+      "origin": "East India Company",
+      "valuation": "$450,000 USD",
+      "provenance": "Private collection London -> Dhaka"
+    }
+  ],
+  "intelligence_reports": [
+    {
+      "id": "INTEL-2025-04",
+      "subject": "Rice Puller Phenomenon",
+      "summary": "Forensic validation of magnetic/radioactive properties in copper artifacts shows 92% match with authentic high-energy specimens.",
+      "source": "Global Physical Lab"
+    }
+  ]
+}

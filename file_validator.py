@@ -1,6 +1,10 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
+# Initialize environment variables
+load_dotenv()
 
 app = Flask(__name__)
 

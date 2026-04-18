@@ -1,7 +1,11 @@
 import os
 import subprocess
 from flask import Flask, render_template, request, jsonify, send_from_directory
+from dotenv import load_dotenv
 from forensic_engine import ingestor, analyzer, integrator, reporter
+
+# Load environment variables from .env
+load_dotenv()
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
