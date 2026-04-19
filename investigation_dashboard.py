@@ -10,8 +10,14 @@ except ImportError:
     psutil = None
 
 
+import logging
+
 # Load environment variables from .env
 load_dotenv()
+
+# Suppress standard Flask/Werkzeug console spam
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
