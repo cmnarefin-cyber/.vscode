@@ -1,6 +1,8 @@
 import os
 import subprocess
-from flask import Flask, render_template, request, jsonify, send_from_directory
+import secrets
+import requests
+from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect, url_for
 from dotenv import load_dotenv
 from forensic_engine import ingestor, analyzer, integrator, reporter
 
@@ -20,8 +22,56 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("GITHUB_REDIRECT_URI", "http://localhost:5002/callback")
+
+# --- AUTH MIDDLEWARE ---
+@app.before_request
+def require_oauth():
+    allowed_routes = ['login', 'callback', 'static', 'favicon']
+    if request.endpoint not in allowed_routes and not session.get('access_token'):
+        return redirect(url_for('login'))
+
+@app.route('/login')
+def login():
+    if not CLIENT_ID or not CLIENT_SECRET:
+        return "<h1 style='color:red'>ERROR: GITHUB_CLIENT_ID / SECRET missing from .env!</h1>", 500
+    state = secrets.token_hex(16)
+    session['oauth_state'] = state
+    url = f"https://github.com/login/oauth/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&state={state}&scope=read:user"
+    return f'''
+    <div style="background:#020408;color:#00ff9d;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;flex-direction:column;">
+        <h1 style="letter-spacing:3px;">RESTRICTED FORENSIC SUITE</h1>
+        <p style="color:#8e9aaf;">Authentication required to view intelligence.</p>
+        <a href="{url}" style="padding:15px 30px; border:1px solid #00ff9d; color:#00ff9d; text-decoration:none; margin-top:30px; text-transform:uppercase; font-weight:bold; transition:0.3s; background:rgba(0,255,157,0.1);">[ INITIATE GITHUB HANDSHAKE ]</a>
+    </div>
+    '''
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    if not code: return "No code", 400
+    expected_state = session.pop('oauth_state', None)
+    if request.args.get('state') != expected_state: return "CSRF Error", 400
+    
+    resp = requests.post("https://github.com/login/oauth/access_token", data={
+        "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET, "code": code, "redirect_uri": REDIRECT_URI
+    }, headers={"Accept": "application/json"})
+    
+    token = resp.json().get("access_token")
+    if not token: return "Failed to authenticate with GitHub", 400
+    session['access_token'] = token
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/')
 def index():

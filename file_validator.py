@@ -53,10 +53,28 @@ def upload_file():
         
         try:
             file.save(save_path)
+            
+            # --- Advanced Document Parsing ---
+            extracted_preview = "Raw content processing unavailable..."
+            ext = filename.rsplit('.', 1)[1].lower()
+            if ext == 'txt':
+                with open(save_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    extracted_preview = f.read(1000)
+            elif ext == 'pdf':
+                try:
+                    import PyPDF2
+                    with open(save_path, 'rb') as f:
+                        reader = PyPDF2.PdfReader(f)
+                        extracted_preview = reader.pages[0].extract_text()[:1000] if len(reader.pages) > 0 else "Empty PDF."
+                except ImportError:
+                    extracted_preview = "PyPDF2 engine missing. Run 'pip install PyPDF2' for PDF parsing."
+            elif ext in ['png', 'jpg', 'jpeg']:
+                extracted_preview = "Image OCR locked. Requires 'pytesseract' package for image decoding."
+
             return render_template('upload.html', 
-                                   success=f"File '{filename}' successfully validated and uploaded!")
+                                   success=f"File '{filename}' successfully validated and logic parsed! \n\n[TEXT PREVIEW]:\n{extracted_preview}...")
         except Exception as e:
-            return render_template('upload.html', error=f"Failed to save file: {str(e)}")
+            return render_template('upload.html', error=f"Failed to process file: {str(e)}")
 
     return render_template('upload.html', error="Something went wrong.")
 
