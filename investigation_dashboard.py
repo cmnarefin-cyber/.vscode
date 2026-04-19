@@ -21,6 +21,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def index():
     return render_template('forensic.html')
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'forensic_intelligence_seal.png', mimetype='image/png')
+
 @app.route('/ingest', methods=['POST'])
 def ingest():
     if 'file' not in request.files:
