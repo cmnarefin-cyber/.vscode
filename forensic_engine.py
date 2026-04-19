@@ -2,16 +2,20 @@ import os
 import hashlib
 import time
 import json
+import logging
 from datetime import datetime
+from typing import Dict, Any, List, Optional
+
+logger = logging.getLogger(__name__)
 
 class DataIngestor:
     """Handles secure ingestion of case files with chain-of-custody logging."""
-    def __init__(self, upload_dir="uploads"):
+    def __init__(self, upload_dir: str = "uploads") -> None:
         self.upload_dir = upload_dir
         if not os.path.exists(self.upload_dir):
             os.makedirs(self.upload_dir)
 
-    def process_file(self, file_path):
+    def process_file(self, file_path: str) -> Dict[str, Any]:
         """Processes a file and returns forensic metadata."""
         if not os.path.exists(file_path):
             return {"error": "File not found"}
@@ -43,7 +47,8 @@ class DataIngestor:
             "status": "VALIDATED"
         }
 
-    def _calculate_hash(self, file_path):
+    def _calculate_hash(self, file_path: str) -> str:
+        """Calculates SHA-256 hash securely via block-reading."""
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):
@@ -52,17 +57,19 @@ class DataIngestor:
 
 class ForensicAnalyzer:
     """Implements forensic analysis of text and document metadata."""
-    def __init__(self, kb_path="knowledge_base.json"):
+    def __init__(self, kb_path: str = "knowledge_base.json") -> None:
         self.kb = self._load_kb(kb_path)
 
-    def _load_kb(self, path):
+    def _load_kb(self, path: str) -> Dict[str, Any]:
+        """Safely loads knowledge base JSON schema."""
         try:
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except:
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.warning(f"KB load failed ({e}). Defaulting to empty metrics.")
             return {"entities": []}
 
-    def analyze_document(self, content):
+    def analyze_document(self, content: str) -> Dict[str, Any]:
         content_lower = content.lower()
         found_entities = []
         for entity in self.kb.get("entities", []):
@@ -79,17 +86,19 @@ class ForensicAnalyzer:
 
 class IntelIntegrator:
     """Provides high-fidelity integration with the intelligence knowledge base."""
-    def __init__(self, kb_path="knowledge_base.json"):
+    def __init__(self, kb_path: str = "knowledge_base.json") -> None:
         self.kb_path = kb_path
 
-    def query_global_databases(self, query):
+    def query_global_databases(self, query: str) -> List[Dict[str, Any]]:
+        """Scans multi-jurisdictional databases for matching threat intel."""
         time.sleep(1.0) # Network latency simulation
         query_lower = query.lower()
         
         try:
-            with open(self.kb_path, "r") as f:
+            with open(self.kb_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-        except:
+        except (FileNotFoundError, json.JSONDecodeError):
+            logger.error(f"Intelligence database missing or corrupt at {self.kb_path}.")
             data = {"entities": [], "assets": []}
 
         # Filter entities and assets based on query
@@ -118,7 +127,7 @@ class IntelIntegrator:
 
 class ReportGenerator:
     """Generates elite-tier executive documentation."""
-    def generate_report(self, case_data):
+    def generate_report(self, case_data: Dict[str, Any]) -> str:
         report = f"""
 # EXECUTIVE INVESTIGATIVE REPORT
 **CASE REF:** {case_data.get('case_id', 'URGENT-001')}

@@ -2,6 +2,7 @@ import os
 import subprocess
 import secrets
 import requests
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect, url_for
 from dotenv import load_dotenv
 from forensic_engine import ingestor, analyzer, integrator, reporter
@@ -87,14 +88,23 @@ def ingest():
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     file = request.files['file']
-    if file.filename == '':
+    if not file or file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    # SECURITY: Prevent Path Traversal
+    safe_name = secure_filename(file.filename)
+    if not safe_name:
+        safe_name = f"unnamed_file_{secrets.token_hex(4)}"
+        
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
     file.save(file_path)
     
-    metadata = ingestor.process_file(file_path)
-    return jsonify(metadata)
+    try:
+        metadata = ingestor.process_file(file_path)
+        return jsonify(metadata)
+    except Exception as e:
+        log.error(f"Ingestion failure: {e}")
+        return jsonify({"error": "Engine processing failed."}), 500
 
 @app.route('/query', methods=['POST'])
 def query_intel():
