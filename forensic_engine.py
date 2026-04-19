@@ -19,10 +19,26 @@ class DataIngestor:
         file_size = os.path.getsize(file_path)
         file_hash = self._calculate_hash(file_path)
         
+        # Advanced Document Extraction
+        extracted_text = "Parsing unavailable."
+        ext = file_path.rsplit('.', 1)[-1].lower()
+        if ext == 'txt':
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                extracted_text = f.read(2000)
+        elif ext == 'pdf':
+            try:
+                import PyPDF2
+                with open(file_path, 'rb') as f:
+                    reader = PyPDF2.PdfReader(f)
+                    extracted_text = reader.pages[0].extract_text()[:4000] if reader.pages else "Empty PDF"
+            except ImportError:
+                extracted_text = "Requires PyPDF2 for parsing."
+        
         return {
             "filename": os.path.basename(file_path),
             "size_bytes": file_size,
             "sha256": file_hash,
+            "extracted_text": extracted_text,
             "ingested_at": datetime.now().isoformat(),
             "status": "VALIDATED"
         }
